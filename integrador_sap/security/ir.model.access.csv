@@ -1,1 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+integrador_sap_var1,integrador_sap_var1,model_integrador_sap_property,integrador_sap.manager,1,1,1,1
+integrador_sap_task1,integrador_sap_task1,model_integrador_sap_task,integrador_sap.manager,1,1,1,1

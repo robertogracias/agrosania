@@ -1,7 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        
+
+        <record model="res.groups" id="integrador_sap.manager">
+            <field name="name">Administrador de Intergracion con sap</field>
+        </record>
+
+
+        <record model="integrador_sap.property" id="integrador_sap.url">
+            <field name="name">sap_url</field>
+            <field name="valor">http://localhost:8069</field>
+        </record>
+        <record model="integrador_sap.property" id="integrador_sap.user_field">
+            <field name="name">sap_user_field</field>
+            <field name="valor">sel_groups_1_9_10</field>
+        </record>
+        <record model="integrador_sap.property" id="integrador_sap.suser_type">
+            <field name="name">sap_user_type</field>
+            <field name="valor">9</field>
+        </record>
+        <record model="integrador_sap.property" id="integrador_sap.location">
+            <field name="name">sap_location_parent</field>
+            <field name="valor">7</field>
+        </record>
+
+        <!--record model="ir.cron" id="integrador_sap.cron_partner">
+            <field name="name">Integracion de clientes</field>
+            <field name="interval_number">2</field>
+            <field name="interval_type">hours</field>
+            <field name="code">model.sync_partner()</field>
+        </record-->
+
+        <!-- Menu principal -->
+        <menuitem id="integrador_sap_mnu" name="Integrador SAP" sequence="1" />
+
+        <!--Accion para filtrar las tareas-->
+        <record model="ir.actions.act_window" id="sap_cron">
+            <field name="name">Tareas de Syncronizacion</field>
+            <field name="res_model">ir.cron</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('sap_task','=',True)]</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Tareas de Sincronizacion
+            </p>
+            </field>
+        </record>
+
+        <!--menu del pei-->
+        <menuitem id="sap_cron_mnu" parent="integrador_sap.integrador_sap_mnu" name="Tareas de Syncronizacion" action="sap_cron" sequence="11" />
+
+
+        <record model="ir.ui.view" id="sap_var_form">
+            <field name="name">sap_cron_form</field>
+            <field name="model">integrador_sap.property</field>
+            <field name="arch" type="xml">
+                <form string="Propiedades de la integracion">
+                    <header></header>
+                    <sheet>
+
+                        <group>
+                            <field name="name" placeholder="variable" />
+                            <field name="valor" placeholder="valor" />
+                        </group>
+
+                    </sheet>
+
+                </form>
+            </field>
+        </record>
+
+
+        <!--tree del pei-->
+        <record model="ir.ui.view" id="sap_var_tree">
+            <field name="name">sap_var_tree</field>
+            <field name="model">integrador_sap.property</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name" placeholder="variable" />
+                    <field name="valor" placeholder="valor" />
+                </tree>
+            </field>
+        </record>
+
+
+        <!--action del pei-->
+        <record model="ir.actions.act_window" id="spa_var_action">
+            <field name="name">Variables</field>
+            <field name="res_model">integrador_sap.property</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Variables
+                </p>
+            </field>
+        </record>
+
+        <!--menu del pei-->
+        <menuitem id="sap_var_mnu" parent="integrador_sap.integrador_sap_mnu" name="Variables de configuracion" action="spa_var_action" sequence="12" />
+
 
     </data>
 </odoo>

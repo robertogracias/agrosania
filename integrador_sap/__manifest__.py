@@ -19,12 +19,12 @@
     'version': '14.0',
 
     # any module necessary for this one to work correctly
-    'depends': ['crm','sales','base_automation'],
+    'depends': ['crm','sale_management','base_automation'],
 
     # always loaded
     'data': [
-        'security/ir.model.access.csv',
         'views/views.xml',
+        'security/ir.model.access.csv',
         'data/data.xml',
         'views/templates.xml',
     ],
