@@ -28,6 +28,15 @@ class integrador_user(models.Model):
     _inherit='res.users'
     code=fields.Integer("Codigo")
 
+class integrador_pricelist(models.Model):
+    _inherit='product.pricelist'
+    code=fields.Integer("Codigo")
+    factor=fields.Float("Factor")
+    
+class integrador_location(models.Model):
+    _inherit='stock.location'
+    code=fields.Char("Codigo")
+
 class integrador_property(models.Model):
     _name='integrador_sap.property'
     _description='Atributo de una tarea de integracion'
@@ -140,5 +149,87 @@ class intregrador_sap_partner(models.Model):
                     dic['code']=r['warehouseCode']
                     dic['name']=r['warehouseName']
                     dic['usage']='internal'
-                    dic['parent_id']=parent_location.valor
+                    dic['location_id']=int(parent_location.valor)
                     self.env['stock.location'].create(dic)
+
+    def sync_pricelist(self):
+        _logger.info('Integrador de Listas de precios')
+        var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
+        if var:
+            url=var.valor+'/pricelist'
+            response = requests.get(url)
+            resultado=json.loads(response.text)
+            #parent_location=self.env['integrador_sap.property'].search([('name','=','sap_location_parent')],limit=1)
+            for r in resultado:
+                code=r['listNumber']
+                pricelist=self.env['product.pricelist'].search([('code','=',code)])
+                if pricelist:
+                    dic={}
+                    dic['name']=r['listName']
+                    dic['factor']=r['factor']
+                    pricelist.write(dic)
+                else:
+                    dic={}
+                    dic['code']=r['listNumber']
+                    dic['name']=r['listName']
+                    dic['factor']=r['factor']
+                    self.env['product.pricelist'].create(dic)
+            url=var.valor+'/pricelists-detail'
+            response = requests.get(url)
+            resultado=json.loads(response.text)
+            for r in resultado:
+                product=self.env['product.template'].search([('default_code','=',r['itemCode'])],limit=1)
+                if product:
+                    pricelist=self.env['product.pricelist'].search([('code','=',r['priceList'])],limit=1)
+                    if pricelist:
+                        rule=self.env['product.pricelist.item'].search([('product_tmpl_id','=',product.id),('pricelist_id','=',pricelist.id)])
+                        if rule:
+                            dic={}
+                            dic['applied_on']='1_product'
+                            dic['compute_price']='fixed'
+                            if r['price']>0:
+                                dic['fixed_price']=r['price']
+                            else:
+                                dic['fixed_price']=r['factor']*product.list_price
+                            rule.write(dic)
+                        else:
+                            dic={}
+                            dic['product_tmpl_id']=product.id
+                            dic['pricelist_id']=pricelist.id
+                            dic['applied_on']='1_product'
+                            dic['compute_price']='fixed'
+                            if r['price']>0:
+                                dic['fixed_price']=r['price']
+                            else:
+                                dic['fixed_price']=r['factor']*product.list_price
+                            self.env['product.pricelist.item'].create(dic)
+
+    def sync_product(self):
+        _logger.info('Integrador de producto')
+        var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
+        if var:
+            url=var.valor+'/items'
+            response = requests.get(url)
+            resultado=json.loads(response.text)
+            for r in resultado:
+                code=r['code']
+                product=self.env['product.template'].search([('default_code','=',code)])
+                if product:
+                    dic={}
+                    dic['name']=r['name']
+                    if r['groupCode']:
+                        categ=self.env['product.category'].search([('code','=',r['groupCode'])],limit=1)
+                        if categ:
+                            dic['categ_id']=categ.id
+                    #dic['barcode']=r['barcode']
+                    product.write(dic)
+                else:
+                    dic={}
+                    dic['default_code']=r['code']
+                    dic['name']=r['name']
+                    if r['groupCode']:
+                        categ=self.env['product.category'].search([('code','=',r['groupCode'])],limit=1)
+                        if categ:
+                            dic['categ_id']=categ.id
+                    #dic['barcode']=r['barcode']
+                    self.env['product.template'].create(dic)
