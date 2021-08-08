@@ -2,7 +2,6 @@
 ##############################################################################
 #
 #    Odoo
-#    Copyright (C) 2017-2018 CodUP (<http://codup.com>).
 #
 ##############################################################################
 import base64
@@ -37,11 +36,81 @@ class integrador_location(models.Model):
     _inherit='stock.location'
     code=fields.Char("Codigo")
 
+class integrador_partner(models.Model):
+    _inherit='res.partner'
+    nrc=fields.Char("NRC")
+    nit=fields.Char("NIT")
+    giro=fields.Char("Giro")
+    razon_social=fields.Char("Razón social")
+
 class integrador_property(models.Model):
     _name='integrador_sap.property'
     _description='Atributo de una tarea de integracion'
     name=fields.Char('Atributo')
     valor=fields.Char('Valor')
+    
+class integrador_ruta(models.Model):
+    _name='integrador_sap.ruta'
+    _description='Ruta'
+    codigo=fields.Char('Codigo')
+    name=fields.Char('Ruta')
+
+class integrador_sucursal(models.Model):
+    _name='integrador_sap.sucursal'
+    _description='Sucursal'
+    name=fields.Char('Sucursal')
+    codigo=fields.Char('Codigo')
+
+class integrador_orderline(models.Model):
+    _inherit='sale.order.line'
+    user_id = fields.Many2one('res.users', required=False,string='Vendedor')
+
+class integrador_order(models.Model):
+    _inherit='sale.order'
+    code=fields.Integer("Codigo")
+    ruta_id = fields.Many2one('integrador_sap.ruta', required=False,string='Ruta')
+    sucursal_id = fields.Many2one('integrador_sap.sucursal', required=False,string='Ruta')
+    gestion=fields.Char('Gestion')
+    
+    def sync_sap(self):
+        _logger.info('Integrador de ordenes')
+        var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
+        if var:
+            for r in self:
+                dic={}
+                dic['clientCode']=r.partner_id.ref
+                dic['clientName']=r.partner_id.name
+                dic['documentDate']=r.date_order
+                dic['documentDueDate']=r.validity_date
+                dic['salesPersonCode']=r.user_id.code
+                dic['comments']=r.note
+                dic['nrc']=r.partner_id.nrc
+                dic['nit']=r.partner_id.nit
+                dic['giro']=r.partner_id.giro
+                dic['fechaDocumento']=r.date_order
+                dic['razonSocial']=r.partner_id.razon_social
+                dic['direccion']=r.partner_shipping_id.street
+                dic['sucursal']=r.sucursal_id.codigo
+                dic['ruta']=r.ruta_id.codigo
+                dic['responsable']=r.user_id.code
+                dic['getsion']=r.gestion
+                lines=[]
+                for l in r.order_line:
+                    line={}
+                    line['itemCode']=l.product_id.default_code
+                    line['quantity']=l.product_uom_qty
+                    for t in l.tax_id:
+                        line['taxCode']=t.description
+                    line['price']=l.price_unit
+                    line['discountPercent']=l.discount
+                    line['salesPersonCode']=l.user_id.code
+                    line['text']=l.name
+                    lines.append(line)
+                dic['orderDetail']=lines
+                encabezado = {"content-type": "application/json"}
+                json_datos = json.dumps(dic)
+                result = requests.post(var+'/sales-order',data = json_datos, headers=encabezado)
+            print(r.text)
 
 class intregrador_sap_partner(models.Model):
     _name='integrador_sap.task'
@@ -217,6 +286,7 @@ class intregrador_sap_partner(models.Model):
                 if product:
                     dic={}
                     dic['name']=r['name']
+                    dic['type']='product'
                     if r['groupCode']:
                         categ=self.env['product.category'].search([('code','=',r['groupCode'])],limit=1)
                         if categ:
@@ -227,9 +297,37 @@ class intregrador_sap_partner(models.Model):
                     dic={}
                     dic['default_code']=r['code']
                     dic['name']=r['name']
+                    dic['type']='product'
                     if r['groupCode']:
                         categ=self.env['product.category'].search([('code','=',r['groupCode'])],limit=1)
                         if categ:
                             dic['categ_id']=categ.id
                     #dic['barcode']=r['barcode']
                     self.env['product.template'].create(dic)
+
+    def sync_stock(self):
+        var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
+        if var:
+            url=var.valor+'/items-stock'
+            ubicaciones={}
+            lst=self.env['stock.location'].search([('usage','=','internal')])
+            for l in lst:
+                if l.code:
+                    ubicaciones[l.code]=l
+            response = requests.get(url)
+            resultado=json.loads(response.text)
+            inventory=self.env['stock.inventory'].create({'name':'Syncronizacion:'+str(fields.Datetime.now())})
+            inventory.action_start()
+            for r in resultado:
+                code=r['itemCode']
+                product=self.env['product.product'].search([('default_code','=',code)])
+                if product:
+                    location=ubicaciones[r['warehouseCode']]
+                    if location:
+                        dic={}
+                        dic['product_id']=product.id
+                        dic['location_id']=location.id
+                        dic['inventory_id']=inventory.id
+                        dic['product_qty']=r['onHand']
+                        self.env['stock.inventory.line'].create(dic)
+            inventory.action_validate()
