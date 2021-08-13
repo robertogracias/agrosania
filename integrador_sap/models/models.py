@@ -101,7 +101,7 @@ class integrador_order(models.Model):
                 dic['nrc']=r.partner_id.nrc
                 dic['nit']=r.partner_id.nit
                 dic['giro']=r.partner_id.giro
-                dic['fechaDocumento']=r.date_order
+                dic['fechaDocumento']='2021-08-13'
                 dic['razonSocial']=r.partner_id.razon_social
                 dic['direccion']=r.partner_shipping_id.street
                 dic['sucursal']=r.sucursal_id.codigo
@@ -212,6 +212,9 @@ class intregrador_sap_partner(models.Model):
                     dic['phone']=r['phone']
                     dic['mobile']=r['mobile']
                     dic['email']=r['email']
+                    dic['giro']=r['giro']
+                    dic['nit']=r['nit']
+                    dic['nrc']=r['nrc']
                     partner.write(dic)
                 else:
                     dic={}
@@ -221,6 +224,9 @@ class intregrador_sap_partner(models.Model):
                     dic['phone']=r['phone']
                     dic['mobile']=r['mobile']
                     dic['email']=r['email']
+                    dic['giro']=r['giro']
+                    dic['nit']=r['nit']
+                    dic['nrc']=r['nrc']
                     self.env['res.partner'].create(dic)
     
     def sync_categorias(self):
