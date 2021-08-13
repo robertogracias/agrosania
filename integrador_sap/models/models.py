@@ -42,6 +42,7 @@ class integrador_partner(models.Model):
     nit=fields.Char("NIT")
     giro=fields.Char("Giro")
     razon_social=fields.Char("Razón social")
+    taxcode=fields.Char("taxcode")
 
 class integrador_property(models.Model):
     _name='integrador_sap.property'
@@ -54,6 +55,19 @@ class integrador_ruta(models.Model):
     _description='Ruta'
     codigo=fields.Char('Codigo')
     name=fields.Char('Ruta')
+    
+class integrador_taxcode(models.Model):
+    _name='integrador_sap.taxcode'
+    _description='Impuesto'
+    codigo=fields.Char('Codigo')
+    name=fields.Char('Impuesto')
+    Rate=fields.Char('Rate')
+    
+class integrador_taxcode(models.Model):
+    _name='integrador_sap.gestion'
+    _description='Gestion'
+    codigo=fields.Char('Codigo')
+    name=fields.Char('Name')
 
 class integrador_sucursal(models.Model):
     _name='integrador_sap.sucursal'
@@ -70,7 +84,7 @@ class integrador_order(models.Model):
     code=fields.Integer("Codigo")
     ruta_id = fields.Many2one('integrador_sap.ruta', required=False,string='Ruta')
     sucursal_id = fields.Many2one('integrador_sap.sucursal', required=False,string='Ruta')
-    gestion=fields.Char('Gestion')
+    gestion=fields.Many2one('integrador_sap.gestion', required=False,string='gestion')
     
     def sync_sap(self):
         _logger.info('Integrador de ordenes')
@@ -93,7 +107,7 @@ class integrador_order(models.Model):
                 dic['sucursal']=r.sucursal_id.codigo
                 dic['ruta']=r.ruta_id.codigo
                 dic['responsable']=r.user_id.code
-                dic['getsion']=r.gestion
+                dic['getsion']=r.gestion.codigo
                 lines=[]
                 for l in r.order_line:
                     line={}
@@ -112,10 +126,73 @@ class integrador_order(models.Model):
                 result = requests.post(var+'/sales-order',data = json_datos, headers=encabezado)
             print(r.text)
 
+
 class intregrador_sap_partner(models.Model):
     _name='integrador_sap.task'
     _description='Tarea de integracion con sap'
     name=fields.Char('Tarea')
+    
+    
+    def sync_sucursales(self):
+        _logger.info('Integrador de sucursales')
+        var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
+        if var:
+            url=var.valor+'/sucursales'
+            response = requests.get(url)
+            resultado=json.loads(response.text)
+            for r in resultado:
+                code=r['code']
+                partner=self.env['integrador_sap.sucursal'].search([('codigo','=',code)])
+                if partner:
+                    dic={}
+                    dic['name']=r['name']
+                    partner.write(dic)
+                else:
+                    dic={}
+                    dic['codigo']=r['code']
+                    dic['name']=r['name']
+                    self.env['integrador_sap.sucursal'].create(dic)
+
+    def sync_ruta(self):
+        _logger.info('Integrador de rutas')
+        var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
+        if var:
+            url=var.valor+'/rutas'
+            response = requests.get(url)
+            resultado=json.loads(response.text)
+            for r in resultado:
+                code=r['code']
+                partner=self.env['integrador_sap.ruta'].search([('codigo','=',code)])
+                if partner:
+                    dic={}
+                    dic['name']=r['name']
+                    partner.write(dic)
+                else:
+                    dic={}
+                    dic['codigo']=r['code']
+                    dic['name']=r['name']
+                    self.env['integrador_sap.ruta'].create(dic)
+    
+    def sync_gestiones(self):
+        _logger.info('Integrador de gestiones')
+        var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
+        if var:
+            url=var.valor+'/gestion-venta'
+            response = requests.get(url)
+            resultado=json.loads(response.text)
+            for r in resultado:
+                code=r['code']
+                partner=self.env['integrador_sap.gestion'].search([('codigo','=',code)])
+                if partner:
+                    dic={}
+                    dic['name']=r['description']
+                    partner.write(dic)
+                else:
+                    dic={}
+                    dic['codigo']=r['code']
+                    dic['name']=r['description']
+                    self.env['integrador_sap.gestion'].create(dic)
+                    
     
     
     def sync_partner(self):

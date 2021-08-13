@@ -1,3 +1,11 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 integrador_sap_var1,integrador_sap_var1,model_integrador_sap_property,integrador_sap.manager,1,1,1,1
 integrador_sap_task1,integrador_sap_task1,model_integrador_sap_task,integrador_sap.manager,1,1,1,1
+integrador_sap_ruta,integrador_sap_ruta,model_integrador_sap_ruta,integrador_sap.manager,1,1,1,1
+integrador_sap_ruta1,integrador_sap_ruta1,model_integrador_sap_ruta,base.group_user,1,0,0,0
+integrador_sap_sucursal,integrador_sap_sucursal,model_integrador_sap_sucursal,integrador_sap.manager,1,1,1,1
+integrador_sap_sucursal1,integrador_sap_sucursal1,model_integrador_sap_sucursal,base.group_user,1,0,0,0
+integrador_sap_taxcode,integrador_sap_taxcode,model_integrador_sap_taxcode,integrador_sap.manager,1,1,1,1
+integrador_sap_taxcode1,integrador_sap_taxcode1,model_integrador_sap_taxcode,base.group_user,1,0,0,0
+integrador_sap_gestion,integrador_sap_gestion,model_integrador_sap_gestion,integrador_sap.manager,1,1,1,1
+integrador_sap_gestion1,integrador_sap_gestion1,model_integrador_sap_gestion,base.group_user,1,0,0,0

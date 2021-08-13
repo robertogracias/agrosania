@@ -14,6 +14,21 @@ _logger = logging.getLogger(__name__)
 
 class test_agrosania(http.Controller):
     
+    @http.route('/tax-types', auth='public')
+    def get_tax(self, **kw):
+        return '[{"code":"EXE","name":"Exento","rate":0},{"code":"IVA","name":"Impuesto al Valor","rate":13},{"code":"IVAIMP","name":"IVA Importaciones","rate":13},{"code":"PER","name":"Percepción 1%","rate":1},{"code":"RET13","name":"Retención 13% IVA Suj. Excl.","rate":13},{"code":"TASA0","name":"No Sujeto","rate":0}]'
+
+    @http.route('/sucursales', auth='public')
+    def get_sucursales(self, **kw):
+        return '[{"code":"008","name":"FINCA"},{"code":"007","name":"FORESTALES"},{"code":"003","name":"MERCADO"},{"code":"006","name":"MOVIL"},{"code":"001","name":"OFICINA SAN SALVADOR"},{"code":"005","name":"PLANTA"},{"code":"004","name":"PORQUERIZA"},{"code":"002","name":"SAN JULIAN"}]'
+    
+    @http.route('/rutas', auth='public')
+    def get_rutas(self, **kw):
+        return '[{"code":"RC","name":"--"},{"code":"M3","name":"Carlos Barahona"},{"code":"R8","name":"Carlos Jaco"},{"code":"R12","name":"COMODIN1"},{"code":"R15","name":"COMODIN2"},{"code":"R42","name":"COMODIN3"},{"code":"R13","name":"COMODIN4"},{"code":"CM","name":"Cristina Mejía"},{"code":"Daysi","name":"Daysi Tachin"},{"code":"R1","name":"DENIS CAMPOS"},{"code":"R6","name":"EDWIN ALCIDES"},{"code":"R5","name":"EFRAIN VELIZ"},{"code":"R50","name":"Empleados planta"},{"code":"EA","name":"Ercides Arias"},{"code":"R4","name":"ERNESTO MEDINA"},{"code":"R14","name":"FRANCISCO REGALADO"},{"code":"R51","name":"Gastos y Regalias"},{"code":"GP","name":"Griselda Portillo"},{"code":"R3","name":"HENRY ESCOBAR"},{"code":"HA","name":"Herberth Alvarenga"},{"code":"R200","name":"Inactivos"},{"code":"M2","name":"Jose Amaya"},{"code":"R11","name":"JOSE ROBERTO DURAN"},{"code":"R7","name":"Leonardo Chalchuapa"},{"code":"R9","name":"LUIS PEREZ"},{"code":"Mayra","name":"Mayra Garcia"},{"code":"M1","name":"Nelsón Castillo"},{"code":"N/D","name":"No definido"},{"code":"R100","name":"Oficina"},{"code":"R10","name":"Operador Logìstico Styba"},{"code":"R41","name":"SAMUEL NAVARRO"},{"code":"PECUARIO","name":"SAUL JACOBO"},{"code":"R0","name":"Virtual"},{"code":"R2","name":"WILSON ALBERTO RAMIREZ GUTIERR"}]'
+
+    @http.route('/gestion-venta', auth='public')
+    def get_gestion(self, **kw):
+        return '[{"code":"EV","description":"Ejecutivo de Ventas"},{"code":"SV","description":"Soporte de Ventas"}]'
     
     @http.route('/items-stock', auth='public')
     def get_existencia(self, **kw):
