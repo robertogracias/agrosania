@@ -218,9 +218,9 @@ class intregrador_sap_partner(models.Model):
                     dic['phone']=r['phone']
                     dic['mobile']=r['mobile']
                     dic['email']=r['email']
-                    #dic['giro']=r['giro']
+                    dic['giro']=r['giro']
                     dic['nit']=r['nit']
-                    #dic['nrc']=r['nrc']                    
+                    dic['nrc']=r['nrc']                    
                     partner.write(dic)
                 else:
                     dic={}
@@ -230,9 +230,9 @@ class intregrador_sap_partner(models.Model):
                     dic['phone']=r['phone']
                     dic['mobile']=r['mobile']
                     dic['email']=r['email']
-                    #dic['giro']=r['giro']
+                    dic['giro']=r['giro']
                     dic['nit']=r['nit']
-                    #dic['nrc']=r['nrc']
+                    dic['nrc']=r['nrc']
                     partner=self.env['res.partner'].create(dic)
                 #creando la lista de precios
                 pricelist=self.env['product.pricelist'].search([('code','=',r['code'])])
@@ -380,15 +380,23 @@ class intregrador_sap_partner(models.Model):
                 dic={}
                 desde=r['fromDate'][:10]
                 hasta=r['toDate'][:10]
+                desdeyear=r['fromDate'][:4]
+                hastayear=r['toDate'][:4]
                 if rule:
                     dic['applied_on']='1_product'
                     dic['compute_price']='fixed'
-                    if hasta<desde:
-                        dic['fixed_price']=r['specialPrice']
+                    if desdeyear!='1899':
+                        if hastayear=='1899':
+                            dic['fixed_price']=r['specialPrice']
+                        else:
+                            if hasta>desde:
+                                dic['date_start']=desde
+                                dic['date_end']=hasta
+                                dic['fixed_price']=r['periodPrice']
+                            else:
+                                dic['fixed_price']=r['specialPrice']
                     else:
-                        dic['date_start']=desde
-                        dic['date_end']=hasta
-                        dic['fixed_price']=r['periodPrice']
+                        dic['fixed_price']=r['specialPrice']
                     rule.write(dic)
                 else:
                     product=self.env['product.template'].search([('default_code','=',r['itemCode'])],limit=1)
@@ -399,12 +407,18 @@ class intregrador_sap_partner(models.Model):
                             dic['pricelist_id']=cliente.property_product_pricelist.id
                             dic['applied_on']='1_product'
                             dic['compute_price']='fixed'
-                            if hasta<desde:
-                                dic['fixed_price']=r['specialPrice']
+                            if desdeyear!='1899':
+                                if hastayear=='1899':
+                                    dic['fixed_price']=r['specialPrice']
+                                else:
+                                    if hasta>desde:
+                                        dic['date_start']=desde
+                                        dic['date_end']=hasta
+                                        dic['fixed_price']=r['periodPrice']
+                                    else:
+                                        dic['fixed_price']=r['specialPrice']
                             else:
-                                dic['date_start']=desde
-                                dic['date_end']=hasta
-                                dic['fixed_price']=r['periodPrice']
+                                dic['fixed_price']=r['specialPrice']
                             self.env['product.pricelist.item'].create(dic)
                     
 
