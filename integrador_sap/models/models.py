@@ -113,7 +113,7 @@ class integrador_order(models.Model):
                 dic['direccion']=r.partner_shipping_id.street
                 dic['sucursal']=r.sucursal_id.codigo
                 dic['ruta']=r.ruta_id.codigo
-                dic['responsable']=r.ruta_id.code
+                dic['responsable']=r.ruta_id.codigo
                 dic['gestion']=r.gestion.codigo
                 lines=[]
                 for l in r.order_line:
