@@ -91,6 +91,7 @@ class integrador_order(models.Model):
     ruta_id = fields.Many2one('integrador_sap.ruta', required=False,string='Ruta')
     sucursal_id = fields.Many2one('integrador_sap.sucursal', required=False,string='Ruta')
     gestion=fields.Many2one('integrador_sap.gestion', required=False,string='gestion')
+    sap_order=fields.Char("Orden en SAP")
     
     def sync_sap(self):
         _logger.info('Integrador de ordenes')
@@ -100,30 +101,30 @@ class integrador_order(models.Model):
                 dic={}
                 dic['clientCode']=r.partner_id.ref
                 dic['clientName']=r.partner_id.name
-                dic['documentDate']=r.date_order.strftime('yyyy-mm-dd')
-                dic['documentDueDate']=r.validity_date.strftime('yyyy-mm-dd')
+                dic['documentDate']=r.date_order.strftime("%Y-%m-%d")
+                dic['documentDueDate']=r.validity_date.strftime("%Y-%m-%d")
                 dic['salesPersonCode']=r.user_id.code
                 dic['comments']=r.note
                 dic['nrc']=r.partner_id.nrc
                 dic['nit']=r.partner_id.nit
                 dic['giro']=r.partner_id.giro
-                dic['fechaDocumento']=r.date_order.strftime('yyyy-mm-dd')
+                dic['fechaDocumento']=r.date_order.strftime("%Y-%m-%d")
                 dic['razonSocial']=r.partner_id.razon_social
                 dic['direccion']=r.partner_shipping_id.street
                 dic['sucursal']=r.sucursal_id.codigo
                 dic['ruta']=r.ruta_id.codigo
-                dic['responsable']=r.user_id.code
-                dic['getsion']=r.gestion.codigo
+                dic['responsable']=r.ruta_id.code
+                dic['gestion']=r.gestion.codigo
                 lines=[]
                 for l in r.order_line:
                     line={}
                     line['itemCode']=l.product_id.default_code
                     line['quantity']=l.product_uom_qty
                     for t in l.tax_id:
-                        line['taxCode']=r.partner_id.taxcode
+                        line['taxCode']=t.name
                     line['price']=l.price_unit
                     line['discountPercent']=l.discount
-                    line['salesPersonCode']=l.user_id.code
+                    line['salesPersonCode']=r.user_id.code
                     line['text']=l.name
                     lines.append(line)
                 dic['orderDetail']=lines
@@ -131,6 +132,11 @@ class integrador_order(models.Model):
                 json_datos = json.dumps(dic)
                 result = requests.post(var.valor+'/sales-order',data = json_datos, headers=encabezado)
                 _logger.info('RESULTADO:'+result.text)
+                respuesta=json.loads(result.text)
+                if respuesta.has_key('order'):
+                    r.sap_order=respuesta['order']
+                else:
+                    raise ValidationError('No se pudo crear la orden en SAP:'+respuesta['message'])
 
 
 class intregrador_sap_partner(models.Model):
