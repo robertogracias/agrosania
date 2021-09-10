@@ -489,6 +489,7 @@ class intregrador_sap_partner(models.Model):
                     location=ubicaciones[r['warehouseCode']]
                     if location:
                         dic={}
+                        _logger.info('Producto:'+product.name)
                         dic['product_id']=product.id
                         dic['location_id']=location.id
                         dic['inventory_id']=inventory.id
