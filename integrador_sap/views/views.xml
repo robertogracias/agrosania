@@ -7,10 +7,10 @@
         </record>
 
 
-        <record model="integrador_sap.property" id="integrador_sap.url">
+        <!--record model="integrador_sap.property" id="integrador_sap.url">
             <field name="name">sap_url</field>
             <field name="valor">http://localhost:8069</field>
-        </record>
+        </record-->
         <record model="integrador_sap.property" id="integrador_sap.user_field">
             <field name="name">sap_user_field</field>
             <field name="valor">sel_groups_1_9_10</field>

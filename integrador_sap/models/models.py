@@ -15,6 +15,10 @@ from odoo.tools.safe_eval import safe_eval
 _logger = logging.getLogger(__name__)
 
 
+class integrador_prodcut(models.Model):
+    _inherit='product.template'
+    pounds=fields.Float("Libras")
+
 class integrador_task(models.Model):
     _inherit='ir.cron'
     sap_task=fields.Boolean("Tarea de syncronizacion SAP")
@@ -26,6 +30,7 @@ class integrador_category(models.Model):
 class integrador_user(models.Model):
     _inherit='res.users'
     code=fields.Integer("Codigo")
+    soporte=fields.Integer("Soporte de ventas")
 
 class integrador_pricelist(models.Model):
     _inherit='product.pricelist'
@@ -84,6 +89,14 @@ class integrador_sucursal(models.Model):
 class integrador_orderline(models.Model):
     _inherit='sale.order.line'
     user_id = fields.Many2one('res.users', required=False,string='Vendedor')
+    pound_price=fields.Float("Precio por libra")
+    
+    @api.onchange('price_unit','product_id')
+    def set_pound_price(self):
+        for r in self:
+            if r.product_id:
+                if r.product_id.product_tmpl_id.pounds:
+                    r.pound_price=r.price_unit/r.product_id.product_tmpl_id.pounds
 
 class integrador_order(models.Model):
     _inherit='sale.order'
@@ -295,6 +308,8 @@ class intregrador_sap_partner(models.Model):
                     dic['name']=r['name']
                     dic['email']=email
                     dic['login']=email
+                    if r['soporteVentaCode']!='':
+                        dic['soporte']=r['soporteVentaCode']
                     partner.write(dic)
                 else:
                     dic={}
@@ -302,6 +317,8 @@ class intregrador_sap_partner(models.Model):
                     dic['name']=r['name']
                     dic['email']=email
                     dic['login']=email
+                    if r['soporteVentaCode']!='':
+                        dic['soporte']=r['soporteVentaCode']
                     dic[user_field.valor]=user_type.valor
                     self.env['res.users'].create(dic)
     
@@ -366,7 +383,8 @@ class intregrador_sap_partner(models.Model):
                         dic['applied_on']='1_product'
                         dic['compute_price']='fixed'
                         dic['code_producto']=product.default_code
-                        
+                        if r['weightInPounds']>0:
+                            product.write({'pounds':r['weightInPounds']})
                         if r['price']>0:
                             dic['fixed_price']=r['price']
                         else:
@@ -459,6 +477,7 @@ class intregrador_sap_partner(models.Model):
             for l in lst:
                 if l.code:
                     ubicaciones[l.code]=l
+            picks=self.env['stock.picking'].search([('state','not in',('done','cancel'))]).action_cancel()
             response = requests.get(url)
             resultado=json.loads(response.text)
             inventory=self.env['stock.inventory'].create({'name':'Syncronizacion:'+str(fields.Datetime.now())})
