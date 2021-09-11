@@ -399,6 +399,15 @@ class intregrador_sap_partner(models.Model):
             url=var.valor+'/special-price'
             response = requests.get(url)
             resultado=json.loads(response.text)
+            productos={}
+            clientes={}
+            lstp=self.env['product.template'].search([])
+            for pr in lstp:
+                productos[pr.default_code]=pr.id
+            lstc=self.env['res.partner'].search([])
+            for cl in lstc:
+                if cl.cliente.property_product_pricelist:
+                    clientes[cl.ref]=cl.cliente.property_product_pricelist.id
             for r in resultado:
                 rule=self.env['product.pricelist.item'].search([('code_producto','=',r['itemCode']),('code_cliente','=',r['clientCode'])])
                 dic={}
@@ -406,7 +415,6 @@ class intregrador_sap_partner(models.Model):
                 hasta=r['toDate'][:10]
                 desdeyear=r['fromDate'][:4]
                 hastayear=r['toDate'][:4]
-                
                 if rule:
                     dic['applied_on']='1_product'
                     dic['compute_price']='fixed'
@@ -418,12 +426,16 @@ class intregrador_sap_partner(models.Model):
                         dic['fixed_price']=r['specialPrice']
                     rule.write(dic)
                 else:
-                    product=self.env['product.template'].search([('default_code','=',r['itemCode'])],limit=1)
+                    product=None
+                    cliente=None
+                    if r['itemCode'] in productos:
+                        product=productos[r['itemCode']]
                     if product:
-                        cliente=self.env['res.partner'].search([('ref','=',r['clientCode'])],limit=1)
+                        if r['clientCode'] in clientes:
+                            cliente=clientes[r['clientCode']]
                         if cliente:
-                            dic['product_tmpl_id']=product.id
-                            dic['pricelist_id']=cliente.property_product_pricelist.id
+                            dic['product_tmpl_id']=product
+                            dic['pricelist_id']=cliente
                             dic['applied_on']='1_product'
                             dic['compute_price']='fixed'
                             if hasta>desde:
