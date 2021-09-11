@@ -490,9 +490,13 @@ class intregrador_sap_partner(models.Model):
                     if location:
                         dic={}
                         _logger.info('Producto:'+product.name)
-                        dic['product_id']=product.id
-                        dic['location_id']=location.id
-                        dic['inventory_id']=inventory.id
-                        dic['product_qty']=r['onHand']
-                        self.env['stock.inventory.line'].create(dic)
+                        item=self.env['stock.inventory.line'].search([('product_id','=',product.id),('inventory_id','=',inventory.id)],limit=1)
+                        if item:
+                            raise ValidationError("El producto esta repedito:"+product.name)
+                        else:
+                            dic['product_id']=product.id
+                            dic['location_id']=location.id
+                            dic['inventory_id']=inventory.id
+                            dic['product_qty']=r['onHand']
+                            self.env['stock.inventory.line'].create(dic)
             inventory.action_validate()
