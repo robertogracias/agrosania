@@ -392,7 +392,7 @@ class intregrador_sap_partner(models.Model):
                         self.env['product.pricelist.item'].create(dic)
                         customers=self.env['res.partner'].search([('lista_original','=',pricelist.id)])
                         for c in customers:
-                            dic['pricelist_id']=c.pricelist_id.id
+                            dic['pricelist_id']=c.property_product_pricelist.id
                             dic['code_producto']=product.default_code
                             dic['code_cliente']=c.ref
                             self.env['product.pricelist.item'].create(dic)
