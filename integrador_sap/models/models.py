@@ -240,7 +240,11 @@ class intregrador_sap_partner(models.Model):
                     dic['email']=r['email']
                     dic['giro']=r['giro']
                     dic['nit']=r['nit']
-                    dic['nrc']=r['nrc']                    
+                    dic['nrc']=r['nrc']
+                    if 'salesEmployeeCode' in r:
+                        salesman=self.env['res.users'].search([('code','=',r['salesEmployeeCode'])],limit=1)
+                        if salesman:
+                            dic['user_id']=salesman.id
                     partner.write(dic)
                 else:
                     dic={}
@@ -253,6 +257,10 @@ class intregrador_sap_partner(models.Model):
                     dic['giro']=r['giro']
                     dic['nit']=r['nit']
                     dic['nrc']=r['nrc']
+                    if 'salesEmployeeCode' in r:
+                        salesman=self.env['res.users'].search([('code','=',r['salesEmployeeCode'])],limit=1)
+                        if salesman:
+                            dic['user_id']=salesman.id
                     partner=self.env['res.partner'].create(dic)
                 #creando la lista de precios
                 pricelist=self.env['product.pricelist'].search([('code','=',r['code'])])

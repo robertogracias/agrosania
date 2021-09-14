@@ -1,1 +1,350 @@
-[{"code":-1,"name":"-Ningún empleado del departamento de ventas-","eMail":"","cellular":""},{"code":1,"name":"Vanessa Navarro","eMail":"","cellular":""},{"code":2,"name":"Gabriela Argueta","eMail":"","cellular":""},{"code":3,"name":"Karol López","eMail":"","cellular":""},{"code":4,"name":"Gerencia","eMail":"","cellular":""},{"code":5,"name":"Victoria Sánchez","eMail":"","cellular":""},{"code":6,"name":"Supervisor 2","eMail":"","cellular":""},{"code":7,"name":"Patricia Aguirre","eMail":"","cellular":""},{"code":8,"name":"Producto para la degustación","eMail":"","cellular":""},{"code":9,"name":"Silvia Pérez","eMail":"","cellular":""},{"code":10,"name":"Bessie Leal","eMail":"","cellular":""},{"code":11,"name":"Departamento costos planta","eMail":"","cellular":""},{"code":12,"name":"Daniel Iraheta","eMail":"","cellular":""},{"code":13,"name":"Mariela Carcamo","eMail":"","cellular":""},{"code":14,"name":"Guadalupe Romero","eMail":"","cellular":""},{"code":15,"name":"Exportación","eMail":"","cellular":""},{"code":16,"name":"Olga Velásquez","eMail":"","cellular":""},{"code":17,"name":"Julio Galeas","eMail":"","cellular":""},{"code":18,"name":"PH","eMail":"","cellular":""},{"code":19,"name":"Flor de Jiménez","eMail":"","cellular":""},{"code":20,"name":"Francisco Reyes","eMail":"","cellular":""},{"code":21,"name":"Fidel Armando Barcenas","eMail":"","cellular":""},{"code":22,"name":"Juan Gerardo Hernández","eMail":"","cellular":""},{"code":23,"name":"Sanabria","eMail":"","cellular":""},{"code":24,"name":"Nestor Iván Martínez","eMail":"","cellular":""},{"code":25,"name":"Pedro Belloso","eMail":"","cellular":""},{"code":26,"name":"Rafael Alexander López","eMail":"","cellular":""},{"code":27,"name":"William Alexander Rodríguez","eMail":"","cellular":""},{"code":28,"name":"Daniel Enrique Alas Castro","eMail":"","cellular":""},{"code":29,"name":"Javier Cerritos","eMail":"","cellular":""},{"code":30,"name":"Denis Arturo Nunfio Aguirre","eMail":"","cellular":""},{"code":31,"name":"Arnoldo Edgardo Sánchez","eMail":"","cellular":""},{"code":32,"name":"Guillermo Mendoza Henríquez","eMail":"","cellular":""},{"code":33,"name":"Carlos Ernesto Santos Contreras","eMail":"","cellular":""},{"code":34,"name":"José Ernesto Flores Esquivel","eMail":"","cellular":""},{"code":35,"name":"Joaquin Hernández","eMail":"","cellular":""},{"code":36,"name":"Karla Sierra","eMail":"","cellular":""},{"code":37,"name":"Alcira de Romero","eMail":"","cellular":""},{"code":38,"name":"Carlos Chavez","eMail":"","cellular":""},{"code":39,"name":"Ricardo Moran","eMail":"","cellular":""},{"code":40,"name":"Stanley Linares","eMail":"","cellular":""},{"code":41,"name":"Henry Solis","eMail":"","cellular":""},{"code":42,"name":"Isaac Rodriguez","eMail":"","cellular":""},{"code":43,"name":"Oscar Molina","eMail":"","cellular":""},{"code":44,"name":"Gabriela Martinez","eMail":"","cellular":""},{"code":45,"name":"Griselda Portillo","eMail":"","cellular":""},{"code":46,"name":"Centro","eMail":"","cellular":""},{"code":47,"name":"Misael Magaña","eMail":"","cellular":""},{"code":48,"name":"Veronica Pineda","eMail":"","cellular":""},{"code":49,"name":"Susan de Aguilar","eMail":"","cellular":""},{"code":50,"name":"Ericka Rodas","eMail":"","cellular":""},{"code":51,"name":"Patricia Eguizábal","eMail":"","cellular":""},{"code":52,"name":"Roberto Molina","eMail":"","cellular":""},{"code":53,"name":"Lizeth González","eMail":"","cellular":""},{"code":54,"name":"Oriente","eMail":"","cellular":""},{"code":55,"name":"Saul Jacobo","eMail":"","cellular":""},{"code":56,"name":"NombreVen","eMail":"","cellular":""},{"code":57,"name":"Gerencia Oficina","eMail":"","cellular":""}]
+[
+    {
+        "code": -1,
+        "name": "-Ningún empleado del departamento de ventas-",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 1,
+        "name": "Vanessa Navarro",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 2,
+        "name": "Gabriela Argueta",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 3,
+        "name": "Karol López",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 4,
+        "name": "Gerencia",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 5,
+        "name": "Victoria Sánchez",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 6,
+        "name": "Supervisor 2",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 7,
+        "name": "Patricia Aguirre",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 8,
+        "name": "Producto para la degustación",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 9,
+        "name": "Silvia Pérez",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 10,
+        "name": "Bessie Leal",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 11,
+        "name": "Departamento costos planta",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 12,
+        "name": "Daniel Iraheta",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 13,
+        "name": "Mariela Carcamo",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 14,
+        "name": "Guadalupe Romero",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 15,
+        "name": "Exportación",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 16,
+        "name": "Olga Velásquez",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 17,
+        "name": "Julio Galeas",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 18,
+        "name": "PH",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 19,
+        "name": "Flor de Jiménez",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 20,
+        "name": "Francisco Reyes",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 21,
+        "name": "Fidel Armando Barcenas",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 22,
+        "name": "Juan Gerardo Hernández",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 23,
+        "name": "Sanabria",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 24,
+        "name": "Nestor Iván Martínez",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 25,
+        "name": "Pedro Belloso",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 26,
+        "name": "Rafael Alexander López",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 27,
+        "name": "William Alexander Rodríguez",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 28,
+        "name": "Daniel Enrique Alas Castro",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 29,
+        "name": "Javier Cerritos",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 30,
+        "name": "Denis Arturo Nunfio Aguirre",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 31,
+        "name": "Arnoldo Edgardo Sánchez",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 32,
+        "name": "Guillermo Mendoza Henríquez",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 33,
+        "name": "Carlos Ernesto Santos Contreras",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 34,
+        "name": "José Ernesto Flores Esquivel",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 35,
+        "name": "Joaquin Hernández",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 36,
+        "name": "Karla Sierra",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 37,
+        "name": "Alcira de Romero",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 38,
+        "name": "Carlos Chavez",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 39,
+        "name": "Ricardo Moran",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 40,
+        "name": "Stanley Linares",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 41,
+        "name": "Henry Solis",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 42,
+        "name": "Isaac Rodriguez",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 43,
+        "name": "Oscar Molina",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 44,
+        "name": "Gabriela Martinez",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 45,
+        "name": "Griselda Portillo",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 46,
+        "name": "Centro",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 47,
+        "name": "Misael Magaña",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 48,
+        "name": "Veronica Pineda",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 49,
+        "name": "Susan de Aguilar",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 50,
+        "name": "Ericka Rodas",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 51,
+        "name": "Patricia Eguizábal",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 52,
+        "name": "Roberto Molina",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 53,
+        "name": "Lizeth González",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 54,
+        "name": "Oriente",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 55,
+        "name": "Saul Jacobo",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 56,
+        "name": "NombreVen",
+        "eMail": "",
+        "cellular": ""
+    },
+    {
+        "code": 57,
+        "name": "Gerencia Oficina",
+        "eMail": "",
+        "cellular": ""
+    }
+]
