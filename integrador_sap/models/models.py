@@ -25,40 +25,41 @@ class integrador_task(models.Model):
     
 class integrador_category(models.Model):
     _inherit='product.category'
-    code=fields.Integer("Codigo")
+    code=fields.Integer("Codigo",select=True)
 
 class integrador_user(models.Model):
     _inherit='res.users'
-    code=fields.Integer("Codigo")
-    soporte=fields.Integer("Soporte de ventas")
+    code=fields.Integer("Codigo",select=True)
+    soporte=fields.Integer("Soporte de ventas",select=True)
 
 class integrador_pricelist(models.Model):
     _inherit='product.pricelist'
-    code=fields.Char("Codigo")
+    code=fields.Char("Codigo",select=True)
     factor=fields.Float("Factor")
+    sap=fields.Char("Factor",select=True)
 
 class integrador_pricelistitem(models.Model):
     _inherit='product.pricelist.item'
-    code_producto=fields.Char("Codigo producto")
-    code_cliente=fields.Char("Codigo cliente")
+    code_producto=fields.Char("Codigo producto",select=True)
+    code_cliente=fields.Char("Codigo cliente",select=True)
     
 class integrador_location(models.Model):
     _inherit='stock.location'
-    code=fields.Char("Codigo")
+    code=fields.Char("Codigo",select=True)
 
 class integrador_partner(models.Model):
     _inherit='res.partner'
     nrc=fields.Char("NRC")
-    nit=fields.Char("NIT")
+    nit=fields.Char("NIT",select=True)
     giro=fields.Char("Giro")
     razon_social=fields.Char("Razón social")
     taxcode=fields.Char("taxcode")
-    lista_original=fields.Char("Lista Original")
+    lista_original=fields.Char("Lista Original",select=True)
 
 class integrador_property(models.Model):
     _name='integrador_sap.property'
     _description='Atributo de una tarea de integracion'
-    name=fields.Char('Atributo')
+    name=fields.Char('Atributo',select=True)
     valor=fields.Char('Valor')
     
 class integrador_ruta(models.Model):
@@ -306,8 +307,8 @@ class intregrador_sap_partner(models.Model):
                 if partner:
                     dic={}
                     dic['name']=r['name']
-                    dic['email']=email
-                    dic['login']=email
+                    #dic['email']=email
+                    #dic['login']=email
                     if r['soporteVentaCode']!='':
                         dic['soporte']=r['soporteVentaCode']
                     partner.write(dic)
@@ -349,7 +350,9 @@ class intregrador_sap_partner(models.Model):
     def sync_pricelist(self):
         _logger.info('Integrador de Listas de precios')
         var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
+        lista_unica=self.env['integrador_sap.property'].search([('name','=','list_price')],limit=1)
         if var:
+            _logger.info('time 1:'+str(fields.Datetime.now()))
             url=var.valor+'/pricelist'
             response = requests.get(url)
             resultado=json.loads(response.text)
@@ -360,56 +363,103 @@ class intregrador_sap_partner(models.Model):
                 if pricelist:
                     dic={}
                     dic['name']=r['listName']
+                    dic['sap']='Si'
                     dic['factor']=r['factor']
                     pricelist.write(dic)
                 else:
                     dic={}
                     dic['code']=r['listNumber']
                     dic['name']=r['listName']
+                    dic['sap']='Si'
                     dic['factor']=r['factor']
                     self.env['product.pricelist'].create(dic)
+            _logger.info('time 2:'+str(fields.Datetime.now()))
             url=var.valor+'/pricelists-detail'
             response = requests.get(url)
             resultado=json.loads(response.text)
-            self.env['product.pricelist.item'].search([]).unlink()
+            _logger.info('Borrando items:'+str(fields.Datetime.now()))
+            self.env.cr.execute("""DELETE FROM PRODUCT_PRICELIST_ITEM where code_cliente is null""")
+            productos={}
+            clientes={}
+            tarifas={}
+            lstp=self.env['product.template'].search([])
+            for pr in lstp:
+                productos[pr.default_code]=pr.id
+            lstt=self.env['product.pricelist'].search([])
+            for tr in lstt:
+                tarifas[tr.code]=tr.id
+            lstc=self.env['res.partner'].search([])
+            for cl in lstc:
+                if cl.property_product_pricelist:
+                    clientes[cl.ref]=cl.property_product_pricelist.id
+            _logger.info('time 3:'+str(fields.Datetime.now()))
             for r in resultado:
-                product=self.env['product.template'].search([('default_code','=',r['itemCode'])],limit=1)
+                ##product=self.env['product.template'].search([('default_code','=',r['itemCode'])],limit=1)
+                product=None
+                tarifa=None
+                if r['itemCode'] in productos:
+                    product=productos[r['itemCode']]
+                if str(r['priceList']) in tarifas:
+                    tarifa=tarifas[str(r['priceList'])]
                 if product:
-                    pricelist=self.env['product.pricelist'].search([('code','=',r['priceList'])],limit=1)
-                    if pricelist:
+                    #pricelist=self.env['product.pricelist'].search([('code','=',r['priceList'])],limit=1)
+                    if tarifa:
                         dic={}
-                        dic['product_tmpl_id']=product.id
-                        dic['pricelist_id']=pricelist.id
+                        dic['product_tmpl_id']=product
+                        dic['pricelist_id']=tarifas[str(r['priceList'])]
                         dic['applied_on']='1_product'
                         dic['compute_price']='fixed'
-                        dic['code_producto']=product.default_code
-                        if r['weightInPounds']>0:
-                            product.write({'pounds':r['weightInPounds']})
+                        dic['code_producto']=r['itemCode']
+                        if str(r['priceList'])==lista_unica.valor:
+                            if r['weightInPounds']>0:
+                                #product.write({'pounds':r['weightInPounds']})
+                                self.env.cr.execute("""update PRODUCT_template set pounds="""+str(r['weightInPounds'])+""",list_price="""+str(r['price'])+"""  where id="""+str(product)+"""""")
+                            else:
+                                self.env.cr.execute("""update PRODUCT_template set list_price="""+str(r['price'])+"""  where id="""+str(product)+"""""")
+                        else:
+                            if r['weightInPounds']>0:
+                                #product.write({'pounds':r['weightInPounds']})
+                                self.env.cr.execute("""update PRODUCT_template set pounds="""+str(r['weightInPounds'])+""" where id="""+str(product)+"""""")
                         if r['price']>0:
                             dic['fixed_price']=r['price']
-                        else:
-                            dic['fixed_price']=r['factor']*product.list_price
+                        #else:
+                        #    dic['fixed_price']=r['factor']*product.list_price
                         self.env['product.pricelist.item'].create(dic)
-                        customers=self.env['res.partner'].search([('lista_original','=',pricelist.id)])
-                        for c in customers:
-                            dic['pricelist_id']=c.property_product_pricelist.id
-                            dic['code_producto']=product.default_code
-                            dic['code_cliente']=c.ref
-                            self.env['product.pricelist.item'].create(dic)
+
+
+    def sync_preciosespeciales(self):
+        _logger.info('Integrador de precios especiales')
+        var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
+        lista_unica=self.env['integrador_sap.property'].search([('name','=','list_price')],limit=1)
+        if var:
+            _logger.info('time 1:'+str(fields.Datetime.now()))
+            self.env['product.pricelist.item'].invalidate_cache()
+            self.env.cr.execute("""DELETE FROM PRODUCT_PRICELIST_ITEM where code_cliente is not null""")
+            self.env.cr.execute("""Select fill_pricelist('"""+lista_unica.valor+"""')""")
+            self.env.cr.fetchall()
+            self.env['product.pricelist.item'].invalidate_cache()
+            _logger.info('time 2:'+str(fields.Datetime.now()))
             url=var.valor+'/special-price'
             response = requests.get(url)
             resultado=json.loads(response.text)
             productos={}
             clientes={}
+            tarifas={}
             lstp=self.env['product.template'].search([])
             for pr in lstp:
                 productos[pr.default_code]=pr.id
+            lstt=self.env['product.pricelist'].search([])
+            for tr in lstt:
+                tarifas[tr.code]=tr.id
             lstc=self.env['res.partner'].search([])
             for cl in lstc:
-                if cl.cliente.property_product_pricelist:
-                    clientes[cl.ref]=cl.cliente.property_product_pricelist.id
+                if cl.property_product_pricelist:
+                    clientes[cl.ref]=cl.property_product_pricelist.id
+            x=0
             for r in resultado:
                 rule=self.env['product.pricelist.item'].search([('code_producto','=',r['itemCode']),('code_cliente','=',r['clientCode'])])
+                x=x+1
+                _logger.info('procesing:'+str(x))
                 dic={}
                 desde=r['fromDate'][:10]
                 hasta=r['toDate'][:10]
@@ -438,6 +488,7 @@ class intregrador_sap_partner(models.Model):
                             dic['pricelist_id']=cliente
                             dic['applied_on']='1_product'
                             dic['compute_price']='fixed'
+                            dic['code_cliente']=r['clientCode']
                             if hasta>desde:
                                 dic['date_start']=desde
                                 dic['date_end']=hasta
@@ -445,8 +496,7 @@ class intregrador_sap_partner(models.Model):
                             else:
                                 dic['fixed_price']=r['specialPrice']
                             self.env['product.pricelist.item'].create(dic)
-                    
-
+            _logger.info('time 3:'+str(fields.Datetime.now()))
 
     def sync_product(self):
         _logger.info('Integrador de producto')
