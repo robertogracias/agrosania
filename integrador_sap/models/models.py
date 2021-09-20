@@ -8,6 +8,7 @@ import base64
 import json
 import requests
 import logging
+from datetime import datetime
 from collections import OrderedDict
 from odoo import api, fields, models,_
 from odoo.exceptions import ValidationError
@@ -86,6 +87,23 @@ class integrador_sucursal(models.Model):
     _description='Sucursal'
     name=fields.Char('Sucursal')
     codigo=fields.Char('Codigo')
+    
+class integrador_price_item(models.Model):
+    _name='integrador_sap.item_price'
+    _description='Item de la cola de syncronizacion de precios'
+    name=fields.Char('Item')
+    #tipo de item 0:Lista de precios  1: Precio especial
+    tipo=fields.Integer("Tipo de Item")
+    item_code=fields.Char("Codigo del producto")
+    pricelist=fields.Char("Codigo de la lista de precios")
+    weightpound=fields.Float("Peso en Libras")
+    price=fields.Float("Precio")
+    client_code=fields.Char("Codigo del cliente")
+    fromdate=fields.Date("Desde")
+    todate=fields.Date("Hasta")
+    period_price=fields.Float("Precio del periodo")
+    procesado=fields.Boolean("Procesado")
+    
 
 class integrador_orderline(models.Model):
     _inherit='sale.order.line'
@@ -355,6 +373,146 @@ class intregrador_sap_partner(models.Model):
                     dic['location_id']=int(parent_location.valor)
                     self.env['stock.location'].create(dic)
 
+
+    def sync_pricelist_by_items(self):
+        _logger.info('Integrador de Listas de precios por cola de items')
+        var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
+        lista_unica=self.env['integrador_sap.property'].search([('name','=','list_price')],limit=1)
+        if var:
+            _logger.info('time 1:'+str(fields.Datetime.now()))
+            url=var.valor+'/pricelist'
+            response = requests.get(url)
+            resultado=json.loads(response.text)
+            item=0
+            for r in resultado:
+                code=r['listNumber']
+                pricelist=self.env['product.pricelist'].search([('code','=',code)])
+                if pricelist:
+                    dic={}
+                    dic['name']=r['listName']
+                    dic['sap']='Si'
+                    dic['factor']=r['factor']
+                    pricelist.write(dic)
+                else:
+                    dic={}
+                    dic['code']=r['listNumber']
+                    dic['name']=r['listName']
+                    dic['sap']='Si'
+                    dic['factor']=r['factor']
+                    self.env['product.pricelist'].create(dic)
+            _logger.info('time 2:'+str(fields.Datetime.now()))
+            url=var.valor+'/pricelists-detail'
+            response = requests.get(url)
+            resultado=json.loads(response.text)
+            for r in resultado:
+                item+=1
+                _logger.info('time 1:'+str(item))
+                dic={}
+                dic['name']=r['itemCode']
+                dic['tipo']=0
+                dic['item_code']=r['itemCode']
+                dic['pricelist']=r['priceList']
+                dic['weightpound']=r['weightInPounds']
+                dic['price']=r['price']
+                dic['procesado']=False
+                if r['price']>0:
+                    self.env['integrador_sap.item_price'].create(dic)
+            _logger.info('time 3:'+str(fields.Datetime.now()))
+            url=var.valor+'/special-price'
+            response = requests.get(url)
+            resultado=json.loads(response.text)
+            for r in resultado:
+                item+=1
+                _logger.info('time 2:'+str(item))
+                dic={}
+                desde=r['fromDate'][:10]
+                hasta=r['toDate'][:10]
+                dic['name']=r['itemCode']
+                dic['tipo']=1
+                dic['item_code']=r['itemCode']
+                dic['client_code']=r['clientCode']
+                #dic['pricelist']=r['priceList']
+                dic['fromdate']=desde
+                dic['todate']=hasta
+                #dic['weightpound']=r['weightInPounds']
+                dic['price']=r['specialPrice']
+                dic['period_price']=r['periodPrice']
+                dic['procesado']=False
+                now = datetime.now()
+                day = now.strftime("%Y%m%d")
+                if day<hasta:
+                    self.env['integrador_sap.item_price'].create(dic)
+    
+    def proccess_pricelist_items(self):
+        _logger.info('Procesando Items de Precios')
+        var=self.env['integrador_sap.property'].search([('name','=','item_price_batch')],limit=1)
+        count=int(var.valor)
+        lista_unica=self.env['integrador_sap.property'].search([('name','=','list_price')],limit=1)
+        lst=self.env['integrador_sap.item_price'].search([('procesado','=',False)],limit=count,order="id asc")
+        item=0
+        for l in lst:
+            item+=1
+            if l.tipo==0:
+                _logger.info('Tipo 0'+str(item))
+                product=self.env['product.template'].search([('default_code','=',l.item_code)],limit=1)
+                lista=self.env['product.pricelist'].search([('code','=',l.pricelist)],limit=1)
+                if product and lista:
+                    pricelist_item=self.env['product.pricelist.item'].search([('product_tmpl_id','=',product.id),('pricelist_id','=',lista.id)],limit=1)
+                    if pricelist_item:
+                        pricelist_item.write({'fixed_price':l.price})
+                    else:
+                        dic={}
+                        dic['product_tmpl_id']=product.id
+                        dic['pricelist_id']=lista.id
+                        dic['applied_on']='1_product'
+                        dic['compute_price']='fixed'
+                        dic['code_producto']=l.item_code
+                        dic['fixed_price']=l.price
+                        self.env['product.pricelist.item'].create(dic)
+                    if lista.code==lista_unica.valor:
+                        if l.weightpound>0:
+                            product.write({'pounds':l.weightpound,'list_price':l.price})
+                        else:
+                            product.write({'list_price':l.price})
+                    else:
+                        if l.weightpound>0:
+                            product.write({'list_price':l.price})
+                        clientes=self.env['res.partner'].search([('lista_original','=',lista.code)])
+                        for c in clientes:
+                            pricelist_item=self.env['product.pricelist.item'].search([('product_tmpl_id','=',product.id),('pricelist_id','=',c.property_product_pricelist.id)],limit=1)
+                            if pricelist_item:
+                                pricelist_item.write({'fixed_price':l.price})
+                            else:
+                                dic={}
+                                dic['product_tmpl_id']=product.id
+                                dic['pricelist_id']=c.property_product_pricelist.id
+                                dic['applied_on']='1_product'
+                                dic['compute_price']='fixed'
+                                dic['code_producto']=l.item_code
+                                dic['fixed_price']=l.price
+                                self.env['product.pricelist.item'].create(dic)
+            if l.tipo==1:
+                _logger.info('Tipo 1'+str(item))
+                product=self.env['product.template'].search([('default_code','=',l.item_code)],limit=1)
+                cliente=self.env['res.partner'].search([('ref','=',l.client_code)],limit=1)
+                if product and cliente:
+                    pricelist_item=self.env['product.pricelist.item'].search([('product_tmpl_id','=',product.id),('pricelist_id','=',cliente.property_product_pricelist.id)],limit=1)
+                    if pricelist_item:
+                        pricelist_item.unlink()
+                    dic={}
+                    dic['product_tmpl_id']=product.id
+                    dic['pricelist_id']=cliente.property_product_pricelist.id
+                    dic['applied_on']='1_product'
+                    dic['compute_price']='fixed'
+                    dic['code_producto']=l.item_code
+                    dic['fixed_price']=l.price
+                    if l.todate>l.fromdate:
+                        dic['date_start']=l.fromdate
+                        dic['date_end']=l.todate
+                        dic['fixed_price']=l.period_price
+                    self.env['product.pricelist.item'].create(dic)
+            l.write({'procesado':True})
+
     def sync_pricelist(self):
         _logger.info('Integrador de Listas de precios')
         var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
@@ -524,7 +682,7 @@ class intregrador_sap_partner(models.Model):
                         categ=self.env['product.category'].search([('code','=',r['groupCode'])],limit=1)
                         if categ:
                             dic['categ_id']=categ.id
-                    #dic['barcode']=r['barcode']
+                    dic['standard_price']=r['ProductCost']
                     product.write(dic)
                 else:
                     dic={}
@@ -535,7 +693,7 @@ class intregrador_sap_partner(models.Model):
                         categ=self.env['product.category'].search([('code','=',r['groupCode'])],limit=1)
                         if categ:
                             dic['categ_id']=categ.id
-                    #dic['barcode']=r['barcode']
+                    dic['standard_price']=r['ProductCost']
                     self.env['product.template'].create(dic)
 
     def sync_stock(self):
