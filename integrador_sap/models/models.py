@@ -682,7 +682,7 @@ class intregrador_sap_partner(models.Model):
                         categ=self.env['product.category'].search([('code','=',r['groupCode'])],limit=1)
                         if categ:
                             dic['categ_id']=categ.id
-                    dic['standard_price']=r['ProductCost']
+                    dic['standard_price']=r['productCost']
                     product.write(dic)
                 else:
                     dic={}
@@ -693,7 +693,7 @@ class intregrador_sap_partner(models.Model):
                         categ=self.env['product.category'].search([('code','=',r['groupCode'])],limit=1)
                         if categ:
                             dic['categ_id']=categ.id
-                    dic['standard_price']=r['ProductCost']
+                    dic['standard_price']=r['productCost']
                     self.env['product.template'].create(dic)
 
     def sync_stock(self):
