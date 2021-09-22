@@ -8,6 +8,7 @@ import base64
 import json
 import requests
 import logging
+import time
 from datetime import datetime
 from collections import OrderedDict
 from odoo import api, fields, models,_
@@ -165,7 +166,7 @@ class integrador_order(models.Model):
                 result = requests.post(var.valor+'/sales-order',data = json_datos, headers=encabezado)
                 _logger.info('RESULTADO:'+result.text)
                 respuesta=json.loads(result.text)
-                if respuesta.has_key('order'):
+                if 'order' in respuesta:
                     r.sap_order=respuesta['order']
                 else:
                     raise ValidationError('No se pudo crear la orden en SAP:'+respuesta['message'])
@@ -233,7 +234,7 @@ class intregrador_sap_partner(models.Model):
                     partner.write(dic)
                 else:
                     dic={}
-                    dic['codigo']=r['code']
+                    dic['codigo ']=r['code']
                     dic['name']=r['description']
                     self.env['integrador_sap.gestion'].create(dic)
                     
@@ -251,19 +252,42 @@ class intregrador_sap_partner(models.Model):
                 partner=self.env['res.partner'].search([('ref','=',code)])
                 if partner:
                     dic={}
-                    dic['name']=r['name']
-                    dic['street']=r['address']
-                    dic['phone']=r['phone']
-                    dic['mobile']=r['mobile']
-                    dic['email']=r['email']
-                    dic['giro']=r['giro']
-                    dic['nit']=r['nit']
-                    dic['nrc']=r['nrc']
+                    editado=False
+                    if partner.name!=r['name']:
+                        editado=True
+                        dic['name']=r['name']
+                    if partner.street!=r['address']:
+                        editado=True
+                        dic['street']=r['address']
+                    if partner.phone!=r['phone']:
+                        editado=True
+                        dic['phone']=r['phone']
+                    if partner.mobile!=r['mobile']:
+                        editado=True
+                        dic['mobile']=r['mobile']
+                    if partner.email!=r['email']:
+                        editado=True
+                        dic['email']=r['email']
+                    if partner.giro!=r['giro']:
+                        editado=True
+                        dic['giro']=r['giro']
+                    if partner.nit!=r['nit']:
+                        editado=True
+                        dic['nit']=r['nit']
+                    if partner.nrc!=r['nrc']:
+                        editado=True
+                        dic['nrc']=r['nrc']
                     if 'salesEmployeeCode' in r:
                         salesman=self.env['res.users'].search([('code','=',r['salesEmployeeCode'])],limit=1)
                         if salesman:
+                            if partner.user_id:
+                                if partner.user_id!=salesman.id:
+                                    editado=True
+                            else:
+                                editado=True
                             dic['user_id']=salesman.id
-                    partner.write(dic)
+                    if editado:
+                        partner.write(dic)
                 else:
                     dic={}
                     dic['ref']=r['code']
@@ -450,6 +474,7 @@ class intregrador_sap_partner(models.Model):
         lista_unica=self.env['integrador_sap.property'].search([('name','=','list_price')],limit=1)
         lst=self.env['integrador_sap.item_price'].search([('procesado','=',False)],limit=count,order="id asc")
         item=0
+        time1 = time.time()
         for l in lst:
             item+=1
             if l.tipo==0:
@@ -512,6 +537,9 @@ class intregrador_sap_partner(models.Model):
                         dic['fixed_price']=l.period_price
                     self.env['product.pricelist.item'].create(dic)
             l.write({'procesado':True})
+            time2 = time.time()
+            if (time2-time1)>280:
+                break
 
     def sync_pricelist(self):
         _logger.info('Integrador de Listas de precios')
@@ -598,13 +626,6 @@ class intregrador_sap_partner(models.Model):
         var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
         lista_unica=self.env['integrador_sap.property'].search([('name','=','list_price')],limit=1)
         if var:
-            _logger.info('time 1:'+str(fields.Datetime.now()))
-            self.env['product.pricelist.item'].invalidate_cache()
-            self.env.cr.execute("""DELETE FROM PRODUCT_PRICELIST_ITEM where code_cliente is not null""")
-            self.env.cr.execute("""Select fill_pricelist('"""+lista_unica.valor+"""')""")
-            self.env.cr.fetchall()
-            self.env['product.pricelist.item'].invalidate_cache()
-            _logger.info('time 2:'+str(fields.Datetime.now()))
             url=var.valor+'/special-price'
             response = requests.get(url)
             resultado=json.loads(response.text)
