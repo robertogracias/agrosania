@@ -32,7 +32,7 @@ class integrador_prodcut(models.Model):
             for r in resultado:
                 for p in self:
                     if r['itemCode']==p.default_code:
-                        lista=self.env['product.pricelist'].search([('code','=',l.pricelist)],limit=1)
+                        lista=self.env['product.pricelist'].search([('code','=',r['priceList'])],limit=1)
                         if lista:
                             pricelist_item=self.env['product.pricelist.item'].search([('product_tmpl_id','=',p.id),('pricelist_id','=',lista.id)],limit=1)
                             if pricelist_item:
