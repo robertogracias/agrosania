@@ -21,6 +21,96 @@ class integrador_prodcut(models.Model):
     _inherit='product.template'
     pounds=fields.Float("Libras")
 
+    def sync_price(self):
+        _logger.info('Integrador de Listas de precios por producto')
+        var=self.env['integrador_sap.property'].search([('name','=','sap_url')],limit=1)
+        lista_unica=self.env['integrador_sap.property'].search([('name','=','list_price')],limit=1)
+        if var:
+            url=var.valor+'/pricelists-detail'
+            response = requests.get(url)
+            resultado=json.loads(response.text)           
+            for r in resultado:
+                for p in self:
+                    if r['itemCode']==p.default_code:
+                        lista=self.env['product.pricelist'].search([('code','=',l.pricelist)],limit=1)
+                        if lista:
+                            pricelist_item=self.env['product.pricelist.item'].search([('product_tmpl_id','=',p.id),('pricelist_id','=',lista.id)],limit=1)
+                            if pricelist_item:
+                                pricelist_item.write({'fixed_price':r['price']})
+                            else:
+                                dic={}
+                                dic['product_tmpl_id']=p.id
+                                dic['pricelist_id']=lista.id
+                                dic['applied_on']='1_product'
+                                dic['compute_price']='fixed'
+                                dic['code_producto']=p.default_code
+                                dic['fixed_price']=r['price']
+                                self.env['product.pricelist.item'].create(dic)
+                            if lista.code==lista_unica.valor:
+                                if r['weightInPounds']>0:
+                                    p.write({'pounds':r['weightInPounds'],'list_price':r['price']})
+                                else:
+                                    p.write({'list_price':r['price']})
+                            else:
+                                if r['weightInPounds']>0:
+                                    p.write({'pounds':r['weightInPounds']})
+                                clientes=self.env['res.partner'].search([('lista_original','=',lista.code)])
+                                for c in clientes:
+                                    pricelist_item=self.env['product.pricelist.item'].search([('product_tmpl_id','=',p.id),('pricelist_id','=',c.property_product_pricelist.id)],limit=1)
+                                    if pricelist_item:
+                                        pricelist_item.write({'fixed_price':r['price']})
+                                    else:
+                                        dic={}
+                                        dic['product_tmpl_id']=p.id
+                                        dic['pricelist_id']=c.property_product_pricelist.id
+                                        dic['applied_on']='1_product'
+                                        dic['compute_price']='fixed'
+                                        dic['code_producto']=p.default_code
+                                        dic['fixed_price']=r['price']
+                                        self.env['product.pricelist.item'].create(dic)
+            url=var.valor+'/special-price'
+            response = requests.get(url)
+            resultado=json.loads(response.text)
+            for r in resultado:
+                for p in self:
+                    if r['itemCode']==r.default_code:
+                        rule=self.env['product.pricelist.item'].search([('code_producto','=',r['itemCode']),('code_cliente','=',r['clientCode'])])
+                        dic={}
+                        desde=r['fromDate'][:10]
+                        hasta=r['toDate'][:10]
+                        desdeyear=r['fromDate'][:4]
+                        hastayear=r['toDate'][:4]
+                        if rule:
+                            dic['applied_on']='1_product'
+                            dic['compute_price']='fixed'
+                            if hasta>desde:
+                                dic['date_start']=desde
+                                dic['date_end']=hasta
+                                dic['fixed_price']=r['periodPrice']
+                            else:
+                                dic['fixed_price']=r['specialPrice']
+                            rule.write(dic)
+                        else:
+                            cliente=None
+                            if r['clientCode'] in clientes:
+                                cliente=self.env['res.partner'].search([('ref','=',r['clientCode'])],limit=1)
+                            if cliente:
+                                dic['product_tmpl_id']=p.id
+                                dic['pricelist_id']=cliente.property_product_pricelist.id
+                                dic['applied_on']='1_product'
+                                dic['compute_price']='fixed'
+                                dic['code_cliente']=r['clientCode']
+                                if hasta>desde:
+                                    dic['date_start']=desde
+                                    dic['date_end']=hasta
+                                    dic['fixed_price']=r['periodPrice']
+                                else:
+                                    dic['fixed_price']=r['specialPrice']
+                                self.env['product.pricelist.item'].create(dic)
+                            
+
+
+
 class integrador_task(models.Model):
     _inherit='ir.cron'
     sap_task=fields.Boolean("Tarea de syncronizacion SAP")
@@ -501,7 +591,7 @@ class intregrador_sap_partner(models.Model):
                             product.write({'list_price':l.price})
                     else:
                         if l.weightpound>0:
-                            product.write({'list_price':l.price})
+                            product.write({'pounds':l.weightpound})
                         clientes=self.env['res.partner'].search([('lista_original','=',lista.code)])
                         for c in clientes:
                             pricelist_item=self.env['product.pricelist.item'].search([('product_tmpl_id','=',product.id),('pricelist_id','=',c.property_product_pricelist.id)],limit=1)
