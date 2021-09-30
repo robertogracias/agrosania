@@ -17,7 +17,24 @@
             </t>
             <t t-call="agrosania.agrosania_digital"><t t-raw="0"/></t>
         </template>
-    </data>
+   
+        <template id="template_agrosania_impreso">
+            <t t-if="not o" t-set="o" t-value="doc"/>
+            <t t-if="not company">
+                <!-- Multicompany -->
+                <t t-if="company_id">
+                    <t t-set="company" t-value="company_id"/>
+                </t>
+                <t t-elif="o and 'company_id' in o">
+                    <t t-set="company" t-value="o.company_id.sudo()"/>
+                </t>
+                <t t-else="else">
+                    <t t-set="company" t-value="res_company"/>
+                </t>
+            </t>
+            <t t-call="agrosania.agrosania_impreso"><t t-raw="0"/></t>
+        </template>
+
 
 
     <template id="agrosania_digital">
@@ -53,9 +70,53 @@
         </t>
     </template>
 
+
+
+
+    <template id="agrosania_impreso">
+        <t t-name="agrosania.agrosania_impreso">
+            <div class="header" t-att-style="report_header_style">
+                <div class="row">
+                    <div class="col-12 mb4">
+                        <!--img src="agrosania/static/img/header.png" style="width:100%;" alt="Logo"/-->
+                    </div>
+                    <div class="col-9 text-right" style="margin-top:22px;" t-field="company.report_header" name="moto"/>
+                </div>
+                <!--div class="row">
+                    <div class="col-6" name="company_address">
+                        <div t-field="company.partner_id" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;name&quot;], &quot;no_marker&quot;: true}"/>
+                    </div>
+                </div-->
+            </div>
+    
+            <div  t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id" t-att-data-oe-lang="o and o.env.context.get('lang')">
+                <t t-raw="0"/>
+                
+            </div>
+    
+            
+            <div t-attf-class="footer">
+                <div class="text-center">
+                    <!--h2>AGROSANIA S.A. DE C.V.</h2>
+                    <span><b>Oficinas:</b>Oficinas: 51 Av. Sur No. 1738, Colonia Jardines de Monserrat, San Salvador, El Salvador, C.A.</span>
+                    <br/>
+                    <span><b>PBX:</b>(503) 2244-8000 * <b>Fax:</b> (503) 2244-8010 * <b>E-mail:</b> servicioalcliente@agrosania.com</span-->
+                </div>
+            </div>
+        </t>
+    </template>
+
     <template id="agrosania_container">
             <t t-set="body_classname" t-value="'container'"/>
             <t t-call="agrosania.template_agrosania_digital">
+                <t t-raw="0"/>
+            </t>
+    </template>
+
+
+     <template id="agrosania_container_impreso">
+            <t t-set="body_classname" t-value="'container'"/>
+            <t t-call="agrosania.template_agrosania_impreso">
                 <t t-raw="0"/>
             </t>
     </template>
@@ -69,6 +130,15 @@
         name="agrosania.saleorderdigital"
         menu="True"/>
 
+     <report
+        id="saleordenimpreso_report"
+        string="Orden de venta - Impreso"
+        model="sale.order"
+        report_type="qweb-pdf"
+        file="agrosania.saleorderimpreso"
+        name="agrosania.saleorderimpreso"
+        menu="True"/>
+
 
     <template id="saleorderdigital">
         <t t-call="web.html_container">
@@ -78,8 +148,16 @@
         </t>
     </template>
 
+     <template id="saleorderimpreso">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="agrosania.saleorderdigital_document" t-lang="doc.partner_id.lang"/>
+            </t>
+        </t>
+    </template>
+
     <template id="saleorderdigital_document">
-<t t-name="agrosania.saleorderdigital_document">
+        <t t-name="agrosania.saleorderdigital_document">
         <t t-call="agrosania.template_agrosania_digital">
             <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)"/>
             <div class="page">
@@ -137,16 +215,17 @@
                     <!-- In case we want to repeat the header, remove "display: table-row-group" -->
                     <thead style="display: table-row-group">
                         <tr>
-                            <th name="th_description" class="text-left">Description</th>
-                            <th name="th_quantity" class="text-right">Quantity</th>
-                            <th name="th_priceunit" class="text-right">Unit Price</th>
+                            <th name="th_description" class="text-left">Descripción</th>
+                            <th name="th_quantity" class="text-right">Cantidad</th>
+                            <th name="th_priceunit" class="text-right">Precio Unitario</th>
+                            <th name="th_priceunit" class="text-right">Precio/Libra</th>
                             <th name="th_discount" t-if="display_discount" class="text-right" groups="product.group_discount_per_so_line">
-                                <span>Disc.%</span>
+                                <span>Desc.%</span>
                             </th>
-                            <th name="th_taxes" class="text-right">Taxes</th>
+                            <th name="th_taxes" class="text-right">Impuetos.</th>
                             <th name="th_subtotal" class="text-right">
-                                <span groups="account.group_show_line_subtotals_tax_excluded">Amount</span>
-                                <span groups="account.group_show_line_subtotals_tax_included">Total Price</span>
+                                <span groups="account.group_show_line_subtotals_tax_excluded">Monto</span>
+                                <span groups="account.group_show_line_subtotals_tax_included">Total </span>
                             </th>
                         </tr>
                     </thead>
@@ -168,6 +247,9 @@
                                     </td>
                                     <td name="td_priceunit" class="text-right">
                                         <span t-field="line.price_unit"/>
+                                    </td>
+                                     <td name="td_pricepound" class="text-right">
+                                        <span t-field="line.pound_price"/>
                                     </td>
                                     <td t-if="display_discount" class="text-right" groups="product.group_discount_per_so_line">
                                         <span t-field="line.discount"/>
@@ -291,5 +373,5 @@
 
 
     </template>
-
+ </data>
 </odoo>
